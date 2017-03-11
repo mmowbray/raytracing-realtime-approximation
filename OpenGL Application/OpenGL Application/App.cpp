@@ -15,9 +15,10 @@
 #include <string>
 #include <fstream>
 
+#include "Model.h"
+
 glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
 
-glm::mat4 triangle_model_matrix;
 glm::mat4 view_matrix;
 glm::mat4 projection_matrix;
 
@@ -25,6 +26,9 @@ const GLuint DEFAULT_WINDOW_WIDTH = 800, DEFAULT_WINDOW_HEIGHT = 800;
 const GLfloat CAMERA_MOVEMENT_SPEED = 0.02f;
 
 double ypos_old = -1;
+
+const char * MODEL_PATH = "../Models/diamond.obj";
+Model* rayTracingModel;
 
 GLuint loadShaders(std::string vertex_shader_path, std::string fragment_shader_path)
 {
@@ -124,7 +128,7 @@ GLuint loadShaders(std::string vertex_shader_path, std::string fragment_shader_p
 void framebuffer_size_callback(GLFWwindow* window, int new_screen_width, int new_screen_height)
 {
 	glViewport(0, 0, new_screen_width, new_screen_height);
-	projection_matrix = glm::perspective(45.0f, (GLfloat)new_screen_width / (GLfloat)new_screen_height, 0.1f, 10.0f);
+	projection_matrix = glm::perspective(45.0f, (GLfloat)new_screen_width / (GLfloat)new_screen_height, 0.1f, 50.0f);
 }
 
 void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -134,7 +138,7 @@ void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 		if(ypos_old != -1)
 		{
 			camera_position.z += CAMERA_MOVEMENT_SPEED * (ypos_old - ypos);
-			camera_position.z = glm::clamp(camera_position.z, 0.0f, 10.0f);	
+			camera_position.z = glm::clamp(camera_position.z, -10.0f, 10.0f);
 		}
 
 		ypos_old = ypos;
@@ -178,46 +182,28 @@ int main()
 	GLint viewMatrixLoc = glGetUniformLocation(shader_program, "view_matrix");
 	GLint projectionMatrixLoc = glGetUniformLocation(shader_program, "projection_matrix");
 
-	GLfloat triangle_vertices[] = {
-		0.0f,  0.5f, 0.0f,		
-		0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f
-	};
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	GLuint triangleVAO;
-	glGenVertexArrays(1, &triangleVAO);
-	glBindVertexArray(triangleVAO);
+	projection_matrix = glm::perspective(45.0f, (GLfloat)DEFAULT_WINDOW_HEIGHT / (GLfloat)DEFAULT_WINDOW_WIDTH, 0.1f, 50.0f);
 
-	GLuint triangleVertices;
-	glGenBuffers(1, &triangleVertices);
-	glBindBuffer(GL_ARRAY_BUFFER, triangleVertices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-	glEnableVertexAttribArray(0);
-
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-	projection_matrix = glm::perspective(45.0f, (GLfloat)DEFAULT_WINDOW_HEIGHT / (GLfloat)DEFAULT_WINDOW_WIDTH, 0.1f, 100.0f);
+	rayTracingModel = new Model(MODEL_PATH);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		triangle_model_matrix = rotate(triangle_model_matrix, (GLfloat)glfwGetTime() / 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-		view_matrix = lookAt(camera_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		
-		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, value_ptr(triangle_model_matrix));
+		view_matrix = lookAt(camera_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, value_ptr(projection_matrix));
 
-		glBindVertexArray(triangleVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);
+		rayTracingModel->draw(modelMatrixLoc);
 
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
 	}
+
+	delete rayTracingModel;
 
 	glfwTerminate();
 	return 0;
