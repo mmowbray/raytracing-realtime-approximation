@@ -8,15 +8,18 @@ Skybox::Skybox(const char * box_obj_path)
 {
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> uvs;
 	std::vector<GLuint> indices;
 
-	loadOBJ(model_path, vertices, normals, indices);
+	loadOBJ(box_obj_path, vertices, normals, uvs, indices);
 
-	GLuint vertices_VBO, normals_VBO, EBO;
+	GLuint vertices_VBO, normals_VBO, UVs_VBO, EBO;
 
 	glGenVertexArrays(1, &VAO);
+
 	glGenBuffers(1, &vertices_VBO);
 	glGenBuffers(1, &normals_VBO);
+	glGenBuffers(1, &UVs_VBO);
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
@@ -31,6 +34,11 @@ Skybox::Skybox(const char * box_obj_path)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
+	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBO);
+	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(2);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices.front(), GL_STATIC_DRAW);
 
@@ -39,19 +47,7 @@ Skybox::Skybox(const char * box_obj_path)
 	numIndices = indices.size();
 }
 
-void Model::rotate(int mousex, int mousey)
-{
-	if (mousex != -1)
-	{
-		model_matrix = glm::rotate(model_matrix, (float)(0.005 * (old_mouse_position.x - mousex)), glm::vec3(0.0, 1.0, 0.0));
-		model_matrix = glm::rotate(model_matrix, (float)(0.005 * (old_mouse_position.y - mousey)), glm::vec3(1.0, 0.0, 0.0));
-	}
-
-	old_mouse_position.x = mousex;
-	old_mouse_position.y = mousey;
-}
-
-void Model::draw(int model_matrix_uniform)
+void Skybox::draw(int model_matrix_uniform)
 {
 	glBindVertexArray(VAO);
 
@@ -63,4 +59,9 @@ void Model::draw(int model_matrix_uniform)
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 
 	glBindVertexArray(0);
+}
+
+void Skybox::rotate(float rotY)
+{
+	model_matrix = glm::rotate(model_matrix, rotY, glm::vec3(0.0, 1.0, 0.0));
 }

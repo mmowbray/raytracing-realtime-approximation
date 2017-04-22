@@ -9,9 +9,10 @@ Model::Model(const char * model_path)
 {
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> uvs;
 	std::vector<GLuint> indices;
 
-	loadOBJ(model_path, vertices, normals, indices);
+	loadOBJ(model_path, vertices, normals, uvs, indices);
 
 	GLuint vertices_VBO, normals_VBO, EBO;
 
@@ -31,6 +32,8 @@ Model::Model(const char * model_path)
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
+
+	glVertexBindingDivisor(1, 1);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices.front(), GL_STATIC_DRAW);

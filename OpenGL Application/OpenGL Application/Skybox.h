@@ -11,8 +11,9 @@ class Skybox
 	GLuint VAO;
 	int numIndices;
 	GLint model_matrix_uniform_location;
-	glm::vec2 old_mouse_position;
 
 public:
 	Skybox(const char * model_path);
+	void draw(int model_mat_uniform);
+	void rotate(float rotY);
 };

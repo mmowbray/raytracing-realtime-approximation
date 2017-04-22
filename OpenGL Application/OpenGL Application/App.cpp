@@ -14,9 +14,12 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #include "Model.h"
-#include <iostream>
+#include "Skybox.h"
+
+#include "SOIL.h"
 
 glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
 
@@ -27,13 +30,45 @@ const GLuint DEFAULT_WINDOW_WIDTH = 800, DEFAULT_WINDOW_HEIGHT = 800;
 const GLfloat CAMERA_MOVEMENT_SPEED = 0.002f;
 
 const char * MODEL_PATH = "../Models/diamond_2.obj";
+const char * SKYBOX_MODEL_PATH = "../Models/cube.obj";
 Model* rayTracingModel;
+Skybox* skybox;
 
 int screen_width = DEFAULT_WINDOW_WIDTH;
 int screen_height = DEFAULT_WINDOW_HEIGHT;
 
 GLuint backface_normals_tex;
 GLuint backface_depth_tex;
+int draw_mode = 0;
+
+GLuint loadCubemap(std::vector<const GLchar*> faces)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height;
+	unsigned char* image;
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	for (GLuint i = 0; i < faces.size(); i++)
+	{
+		image = SOIL_load_image(faces[i], &width, &height, 0, SOIL_LOAD_RGB);
+		glTexImage2D(
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+			GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image
+		);
+
+		SOIL_free_image_data(image); //free resources
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+	return textureID;
+}
 
 GLuint loadShaders(std::string vertex_shader_path, std::string fragment_shader_path)
 {
@@ -163,6 +198,32 @@ void scroll_callback(GLFWwindow* window, double, double yoffset)
 	camera_position.z = glm::clamp(camera_position.z + (float)yoffset, 1.5f, 15.0f);
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	if(key == GLFW_KEY_LEFT)
+		skybox->rotate(0.005);
+	else if (key == GLFW_KEY_RIGHT)
+		skybox->rotate(-0.005);
+
+	if(action == GLFW_PRESS)
+	{
+		switch (key) {
+			case GLFW_KEY_1:
+				draw_mode = 0;
+				break;
+			case GLFW_KEY_2:
+				draw_mode = 1;
+				break;
+			case GLFW_KEY_3:
+				draw_mode = 2;
+				break;
+			case GLFW_KEY_4:
+				draw_mode = 3;
+				break;
+		}
+	}
+}
+
 int main()
 {
 
@@ -183,6 +244,8 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, cursor_pos_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetKeyCallback(window, key_callback);
+
 	glfwMakeContextCurrent(window);
 	
 	glEnable(GL_MULTISAMPLE);
@@ -196,6 +259,7 @@ int main()
 
 	GLuint backface_shader_program = loadShaders("backface.vs", "backface.fs");
 	GLuint frontface_shader_program = loadShaders("frontface.vs", "frontface.fs");
+	GLuint skybox_shader_program = loadShaders("skybox.vs", "skybox.fs");
 	glUseProgram(frontface_shader_program);
 
 	glClearColor(0.4f, 0.2f, 1.0f, 1.0f);
@@ -203,8 +267,22 @@ int main()
 	projection_matrix = glm::perspective(45.0f, (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT, 0.1f, 50.0f);
 
 	rayTracingModel = new Model(MODEL_PATH);
+	skybox = new Skybox(SKYBOX_MODEL_PATH);
 
-	
+	/* Load the skybox cubemap texture. */
+
+	//prepare skybox cubemap
+	std::vector<const GLchar*> faces;
+	faces.push_back("right.jpg");
+	faces.push_back("left.jpg");
+	faces.push_back("top.jpg");
+	faces.push_back("bottom.jpg");
+	faces.push_back("back.jpg");
+	faces.push_back("front.jpg");
+
+	glActiveTexture(GL_TEXTURE2);
+	GLuint cubemapTexture = loadCubemap(faces);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 	
 	
 	
@@ -237,6 +315,8 @@ int main()
 	GLint frontface_back_normals_sampler_id = glGetUniformLocation(frontface_shader_program, "backface_normals_texture");
 
 	GLint frontface_window_size_id = glGetUniformLocation(frontface_shader_program, "window_size");
+	GLint frontface_skybox_texture_id = glGetUniformLocation(frontface_shader_program, "skybox_texture");
+	GLint frontface_draw_mode_id = glGetUniformLocation(frontface_shader_program, "draw_mode");
 
 	/* Declare our backface FBO. */
 
@@ -297,6 +377,22 @@ int main()
 
 		view_matrix = lookAt(camera_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
+		/* Draw the skybox. */
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glUseProgram(skybox_shader_program);
+
+
+
+		glUniformMatrix4fv(glGetUniformLocation(skybox_shader_program, "projection_matrix"), 1, GL_FALSE, value_ptr(projection_matrix));
+
+		glDepthMask(GL_FALSE);
+		glUniform1i(glGetUniformLocation(skybox_shader_program, "skyboxTexture"), 2); //use texture unit 2skybox_texture
+		skybox->draw(glGetUniformLocation(skybox_shader_program, "model_matrix"));
+		glDepthMask(GL_TRUE);
+
 		/* First Pass. Render the backface depth and normals to the backface FBO. */
 
 		glBindFramebuffer(GL_FRAMEBUFFER, backface_fbo);
@@ -327,10 +423,6 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 		glViewport(0, 0, screen_width, screen_height); //remove?
 
-		/* Clear the screen color and depth buffers. */
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		/* Use the frontface shaders. */
 
 		glUseProgram(frontface_shader_program);
@@ -345,6 +437,8 @@ int main()
 		glUniformMatrix4fv(frontface_view_matrix_id, 1, GL_FALSE, value_ptr(view_matrix));
 		glUniformMatrix4fv(frontface_projection_matrix_id, 1, GL_FALSE, value_ptr(projection_matrix));
 		glUniform2f(frontface_window_size_id, screen_width, screen_height);
+		glUniform1i(frontface_skybox_texture_id, 2); //use texture unit 2 - skybox_texture
+		glUniform1i(frontface_draw_mode_id, draw_mode); //use texture unit 2 - skybox_texture
 
 		/* Draw raytraced model. */
 
@@ -359,6 +453,7 @@ int main()
 	} while (!glfwWindowShouldClose(window));
 
 	delete rayTracingModel;
+	delete skybox;
 
 	glfwTerminate();
 	return 0;

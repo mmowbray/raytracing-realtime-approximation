@@ -9,7 +9,7 @@
 #pragma warning(disable:4996)
 
 bool loadOBJ(
-	const char * path, std::vector<glm::vec3> & out_vertices, std::vector<glm::vec3> & out_normals, std::vector<GLuint> & out_indices)
+	const char * path, std::vector<glm::vec3> & out_vertices, std::vector<glm::vec3> & out_normals, std::vector<glm::vec2> & out_uvs, std::vector<GLuint> & out_indices)
 {
 	printf("Loading OBJ file: %s...\n", path);
 
@@ -39,14 +39,21 @@ bool loadOBJ(
 			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
 			out_normals.push_back(normal);
 		}
+		else if (strcmp(lineHeader, "vt") == 0) {
+			glm::vec2 uv;
+			fscanf(file, "%f %f\n", &uv.x, &uv.y);
+			uv.y = -uv.y; // Invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
+			out_uvs.push_back(uv);
+		}
 		else if (strcmp(lineHeader, "f") == 0) {
 
 			GLuint vidx1, vidx2, vidx3; //vertex indices
+			GLuint uvidx1, uvidx2, uvidx3; //normal indices
 			GLuint nidx1, nidx2, nidx3; //normal indices
 
-			int matches = fscanf(file, "%i//%i %i//%i %i//%i", &vidx1, &nidx1, &vidx2, &nidx2, &vidx3, &nidx3);
+			int matches = fscanf(file, "%i/%i/%i %i/%i/%i %i/%i/%i", &vidx1, &uvidx1, &nidx1, &vidx2, &uvidx2, &nidx2, &vidx3,& uvidx3, &nidx3);
 
-			if (matches != 6) {
+			if (matches != 9) {
 				return false;
 			}
 

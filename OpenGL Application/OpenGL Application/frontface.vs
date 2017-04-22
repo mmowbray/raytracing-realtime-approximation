@@ -13,5 +13,5 @@ uniform mat4 projection_matrix;
 void main() {
 	p1 = vec3(model_matrix * vec4(frontface_vertex_position, 1));
 	gl_Position = projection_matrix * view_matrix * vec4(p1, 1.0f);
-	outFrontfaceNorm = frontface_vertex_normal;
+	outFrontfaceNorm = mat3(transpose(inverse(model_matrix))) * frontface_vertex_normal;  
 }
