@@ -15,6 +15,16 @@ uniform vec2 window_size;
 
 uniform int draw_mode;
 
+float near = 0.1; 
+float far  = 20.0; 
+
+//source: https://learnopengl.com/#!Advanced-OpenGL/Depth-testing
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // Back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
 vec4 approximate_rt(){
 	
 	/* Compute the incident light ray v. */
@@ -55,13 +65,22 @@ void main() {
 			frag_color = approximate_rt();
 			break;
 		case 1:
-			frag_color = vec4(texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb, 1);
+			frag_color = vec4((outFrontfaceNorm + 1.0f)/2.0f, 1.0f); //front normals
 			break;
 		case 2:
-			frag_color = vec4((outFrontfaceNorm + 1.0f)/2.0f, 1); //front normals
+			frag_color = vec4((texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb + 1.0f) / 2.0f, 1.0f);
 			break;
 		case 3:
-			frag_color = vec4(texture(backface_depth_texture, gl_FragCoord.xy / window_size).rgb, 1); //back_normals
+			//source: https://learnopengl.com/#!Advanced-OpenGL/Depth-testing
+			float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
+			frag_color = vec4(vec3(depth), 1.0f);
+			break;
+		case 4:
+			//frag_color = vec4(texture(backface_depth_texture, gl_FragCoord.xy / window_size).zzz, 1); //back depth
+			
+			float depth1 = LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).z) / far; // divide by far for demonstration
+			frag_color = vec4(vec3(depth1), 1.0f);
+			
 			break;
 	}
 }

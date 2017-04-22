@@ -173,12 +173,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	screen_height = height;
 
 	// Update the Projection matrix after a window resize event
-	projection_matrix = glm::perspective(45.0f, ((float)width / (float)height), 0.1f, 1000.0f);
+	projection_matrix = glm::perspective(45.0f, ((float)width / (float)height), 0.1f, 20.0f);
 
 	/* Resize the backface normals texture. */
 	
 	glBindTexture(GL_TEXTURE_2D, backface_normals_tex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	/* Resize the backface depth texture. */
+
+	glBindTexture(GL_TEXTURE_2D, backface_depth_tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, screen_width, screen_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -195,7 +201,7 @@ void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double, double yoffset)
 {
-	camera_position.z = glm::clamp(camera_position.z + (float)yoffset, 1.5f, 15.0f);
+	camera_position.z = glm::clamp(camera_position.z + (float)yoffset, 1.0f, 15.0f);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -219,6 +225,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_4:
 				draw_mode = 3;
+				break;
+			case GLFW_KEY_5:
+				draw_mode = 4;
 				break;
 		}
 	}
@@ -264,7 +273,7 @@ int main()
 
 	glClearColor(0.4f, 0.2f, 1.0f, 1.0f);
 
-	projection_matrix = glm::perspective(45.0f, (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT, 0.1f, 50.0f);
+	projection_matrix = glm::perspective(45.0f, (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT, 0.1f, 20.0f);
 
 	rayTracingModel = new Model(MODEL_PATH);
 	skybox = new Skybox(SKYBOX_MODEL_PATH);
@@ -354,7 +363,7 @@ int main()
 
 	///* Connect the backface depth texture to the backface FBO. */
 
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, backface_depth_tex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, backface_depth_tex, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
@@ -429,8 +438,8 @@ int main()
 
 		/* Set the shaders to sample the backface textures. */
 
-		glUniform1i(frontface_back_normals_sampler_id, 0);
-		glUniform1i(frontface_back_depth_sampler_id, 1);
+		glUniform1i(frontface_back_normals_sampler_id, 0); 
+		glUniform1i(frontface_back_depth_sampler_id, 1); //depth texture
 
 		/* Send other uniforms. */
 

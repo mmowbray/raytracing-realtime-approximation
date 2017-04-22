@@ -8,10 +8,8 @@ Skybox::Skybox(const char * box_obj_path)
 {
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> uvs;
-	std::vector<GLuint> indices;
 
-	loadOBJ(box_obj_path, vertices, normals, uvs, indices);
+	loadOBJ(box_obj_path, vertices, normals);
 
 	GLuint vertices_VBO, normals_VBO, UVs_VBO, EBO;
 
@@ -34,17 +32,9 @@ Skybox::Skybox(const char * box_obj_path)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBO);
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(2);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices.front(), GL_STATIC_DRAW);
-
 	glBindVertexArray(0);
 
-	numIndices = indices.size();
+	numVertices = vertices.size();
 }
 
 void Skybox::draw(int model_matrix_uniform)
@@ -56,7 +46,7 @@ void Skybox::draw(int model_matrix_uniform)
 	glUniformMatrix4fv(model_matrix_uniform, 1, GL_FALSE, value_ptr(model_matrix));
 
 	/* Draw. */
-	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, numVertices);
 
 	glBindVertexArray(0);
 }

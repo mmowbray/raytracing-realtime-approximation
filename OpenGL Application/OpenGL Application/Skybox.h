@@ -9,7 +9,7 @@ class Skybox
 	glm::mat4 model_matrix;
 	glm::vec3 rotation, translation;
 	GLuint VAO;
-	int numIndices;
+	int numVertices;
 	GLint model_matrix_uniform_location;
 
 public:
