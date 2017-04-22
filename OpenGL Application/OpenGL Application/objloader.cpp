@@ -58,7 +58,6 @@ bool loadOBJ(
 			char stupidBuffer[1000];
 			fgets(stupidBuffer, 1000, file);
 		}
-
 	}
 
 	return true;

@@ -1,11 +1,10 @@
-#include "Model.h"
+#include "Skybox.h"
 #include "objloader.hpp"
 
 #include "gtc/type_ptr.hpp"
 #include "gtc/matrix_transform.hpp"
 
-
-Model::Model(const char * model_path)
+Skybox::Skybox(const char * box_obj_path)
 {
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
@@ -42,7 +41,7 @@ Model::Model(const char * model_path)
 
 void Model::rotate(int mousex, int mousey)
 {
-	if(mousex != -1)
+	if (mousex != -1)
 	{
 		model_matrix = glm::rotate(model_matrix, (float)(0.005 * (old_mouse_position.x - mousex)), glm::vec3(0.0, 1.0, 0.0));
 		model_matrix = glm::rotate(model_matrix, (float)(0.005 * (old_mouse_position.y - mousey)), glm::vec3(1.0, 0.0, 0.0));
@@ -59,9 +58,9 @@ void Model::draw(int model_matrix_uniform)
 	/* Send model matrix as a uniform. */
 
 	glUniformMatrix4fv(model_matrix_uniform, 1, GL_FALSE, value_ptr(model_matrix));
-	
+
 	/* Draw. */
-	glDrawElements(GL_TRIANGLES, numIndices , GL_UNSIGNED_INT, 0);
-	
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+
 	glBindVertexArray(0);
 }

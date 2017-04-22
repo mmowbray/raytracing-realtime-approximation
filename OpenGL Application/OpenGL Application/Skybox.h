@@ -4,7 +4,7 @@
 #include "glm.hpp"
 #include <glew.h>
 
-class Model
+class Skybox
 {
 	glm::mat4 model_matrix;
 	glm::vec3 rotation, translation;
@@ -14,7 +14,5 @@ class Model
 	glm::vec2 old_mouse_position;
 
 public:
-	Model(const char * model_path);
-	void rotate(int mousex, int mousey);
-	void draw(int model_matrix_uniform);
+	Skybox(const char * model_path);
 };
