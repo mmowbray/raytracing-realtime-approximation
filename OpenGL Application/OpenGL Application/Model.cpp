@@ -58,6 +58,6 @@ void Model::draw(int model_matrix_uniform)
 	
 	/* Draw. */
 	glDrawArrays(GL_TRIANGLES, 0, numVertices);
-	
+
 	glBindVertexArray(0);
 }

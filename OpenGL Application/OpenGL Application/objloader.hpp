@@ -2,7 +2,6 @@
 #define OBJLOADER_H
 
 #include <vector>
-#include <glew.h>
 
 bool loadOBJ(
 	const char * path,
