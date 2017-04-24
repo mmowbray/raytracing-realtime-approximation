@@ -18,7 +18,7 @@ Model::Model(const char * model_path)
 	glGenBuffers(1, &vertices_VBO);
 	glGenBuffers(1, &normals_VBO);
 	glGenBuffers(1, &EBO);
-
+	 
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
