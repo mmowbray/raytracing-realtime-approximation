@@ -266,7 +266,7 @@ int main()
 	glEnable(GL_MULTISAMPLE);
 
 
-	window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Raytracing Approximation", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
