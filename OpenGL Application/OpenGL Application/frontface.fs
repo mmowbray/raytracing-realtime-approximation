@@ -18,6 +18,10 @@ uniform mat4 skybox_model_matrix;
 uniform int draw_mode;
 uniform bool draw_specular;
 
+uniform mat4 model_matrix;
+uniform mat4 view_matrix;
+uniform mat4 projection_matrix;
+
 float near = 0.1; 
 float far  = 20.0;
 
@@ -32,40 +36,38 @@ float LinearizeDepth(float depth)
 
 vec4 approximate_rt(){
 	
-	/* Compute the incident light ray v. */
-	
-	vec3 v = p1 - eye_position;
-
-	/* Compute T1, the refracted ray. */
-	
 	float n_air = 1.0f;
-	float n_glass = 1.44f;
-	
-	vec3 t1 = refract(v, outFrontfaceNorm, n_glass/n_air);
+	float n_glass = 1.2f;
 
-	/* Compute the approximations for P2. */
+	/* First refraction. */
 	
-	float d = abs(texture(backface_depth_texture, gl_FragCoord.xy / window_size).z - gl_FragCoord.z);
-	//d = abs(gl_FragCoord.z);
+	vec3 nEyeDir = normalize(p1 - eye_position);
+	vec3 nNormal = normalize(outFrontfaceNorm);
+	vec3 rayDir = refract(nEyeDir, nNormal, n_air/n_glass);
 	
-	vec3 p2 = p1 + d * t1;
+	if (draw_mode == 1) {
+		/* Single refraction. */
+		rayDir = vec3(inverse(skybox_model_matrix) * vec4(rayDir, 1.0f)); /* Take the rotation of the skybox into account. */		
+		return vec4(texture(skybox_texture, rayDir).rgb, 1.0f);
+	}
 	
-	/* Compute the approximations for N2. */
+	/* Second refraction. */
 	
-	vec2 n2_uv = vec2(p2.x + 1, 1 - p2.y) * (window_size / 2);
-	vec3 n2 = texture(backface_normals_texture, n2_uv).xyz;
+	float eyeThick   = (LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z)) / far;
+	float angleRatio = acos(dot(rayDir,  -outFrontfaceNorm)) / acos(dot(nEyeDir, -outFrontfaceNorm));
+	float estThick   = angleRatio * eyeThick + (1.0-angleRatio);
+	vec3  estExitPt  = eye_position + rayDir * estThick; 
+	vec4  estExitPos = projection_matrix * model_matrix * view_matrix * vec4(estExitPt, 1.0);
+	vec2  estExitPx  = (estExitPos.xy / estExitPos.w / 2.0) + 0.5;
+	vec3  exitNormal = normalize(texture2D(backface_normals_texture, estExitPx).xyz * 2.0 - 1.0);
+	vec3  rayDir2    = refract(rayDir, -exitNormal, n_glass/n_air);
 	
-	/* Compute T2. */
+	if (all(equal(rayDir2, vec3(0.0))))
+		rayDir2 = reflect(rayDir, -exitNormal);
 	
-	vec3 t2 = refract(t1, n2, n_air/n_glass);
-
-	/* Project the doubly refracted ray T2 into the environment. */
+	rayDir2 = vec3(inverse(skybox_model_matrix) * vec4(rayDir2, 1.0f)); /* Take the rotation of the skybox into account. */		
 	
-	/* Take the rotation of the skybox into account. */
-	
-	t2 = vec3(inverse(skybox_model_matrix) * vec4(t2, 1.0f)); //skybox rotation
-	
-	return vec4(texture(skybox_texture, t2).rgb, 1.0f);
+	return vec4(texture(skybox_texture, rayDir2).rgb, 1.0f);
 }
 
 vec4 apply_diffuse_specular(vec3 fragment_colour){
@@ -99,21 +101,32 @@ void main() {
 			frag_color = approximate_rt();
 			
 			if(draw_specular)
-				frag_color = apply_diffuse_specular(vec3(frag_color));
+				frag_color = apply_diffuse_specular(vec3(frag_color));			
 			break;
 		case 1:
-			frag_color = vec4((outFrontfaceNorm + 1.0f)/2.0f, 1.0f); //front normals
+			frag_color = approximate_rt();
+			
+			if(draw_specular)
+				frag_color = apply_diffuse_specular(vec3(frag_color));			
 			break;
-		case 2:
-			frag_color = vec4((texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb + 1.0f)/2.0f, 1.0f);
+		case 2: //front normals
+			frag_color = vec4((outFrontfaceNorm + 1.0f)/2.0f, 1.0f);
 			break;
-		case 3:
-			//source: https://learnopengl.com/#!Advanced-OpenGL/Depth-testing
-			float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
-			frag_color = vec4(vec3(depth), 1.0f);
+		case 3: //back normals
+			frag_color = vec4((texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb + 1.0f) / 2.0f, 1.0f);
 			break;
-		case 4:
-			frag_color = vec4(texture(backface_depth_texture, gl_FragCoord.xy / window_size).zzz, 1); //back depth
+		case 4: //front depth
+			float front_depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
+			frag_color = vec4(vec3(front_depth), 1.0f);
+			break;
+		case 5: //back depth
+			float back_depth = LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) / far; // divide by far for demonstration
+			frag_color = vec4(vec3(back_depth), 1.0f);
+			break;
+		case 6: //thickness
+			float thickness = (LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z)) / far;
+			
+			frag_color = vec4(vec3(thickness), 1.0f);
 			break;
 	}
 }
