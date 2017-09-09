@@ -26,7 +26,7 @@ glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
 glm::mat4 view_matrix;
 glm::mat4 projection_matrix;
 
-const GLuint DEFAULT_WINDOW_WIDTH = 800, DEFAULT_WINDOW_HEIGHT = 800;
+const GLuint DEFAULT_WINDOW_WIDTH = 400, DEFAULT_WINDOW_HEIGHT = 400;
 const GLfloat CAMERA_MOVEMENT_SPEED = 0.002f;
 
 const char * DIAMOND_MODEL_PATH = "../Models/diamond.obj";
@@ -262,7 +262,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES,  8);
 	glEnable(GL_MULTISAMPLE);
 
 
@@ -379,6 +379,8 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, backface_normals_tex);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, backface_depth_tex);
+
+	glEnable(GL_MULTISAMPLE);
 
 	while (!glfwWindowShouldClose(window))
 	{

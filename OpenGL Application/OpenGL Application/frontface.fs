@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec3 outFrontfaceNorm;
-in vec3 p1;
+in vec3 frag_position;
 
 out vec4 frag_color;
 
@@ -25,33 +25,32 @@ uniform mat4 projection_matrix;
 float near = 0.1; 
 float far  = 20.0;
 
-vec3 eye_position = vec3(0,0,50);
-
+//returns depth in NDC (0..1)
 float LinearizeDepth(float depth) 
 {
 	//source: https://learnopengl.com/#!Advanced-OpenGL/Depth-testing
-    float z = depth * 2.0 - 1.0; // Back to NDC 
+    float z = depth * 2.0 - 1.0;
     return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-vec4 approximate_rt(){
+/*vec4 approximate_rt(){
 	
 	float n_air = 1.0f;
 	float n_glass = 1.2f;
 
-	/* First refraction. */
+	/* First refraction. 
 	
 	vec3 nEyeDir = normalize(p1 - eye_position);
 	vec3 nNormal = normalize(outFrontfaceNorm);
 	vec3 rayDir = refract(nEyeDir, nNormal, n_air/n_glass);
 	
 	if (draw_mode == 1) {
-		/* Single refraction. */
-		rayDir = vec3(inverse(skybox_model_matrix) * vec4(rayDir, 1.0f)); /* Take the rotation of the skybox into account. */		
+		/* Single refraction.
+		rayDir = vec3(inverse(skybox_model_matrix) * vec4(rayDir, 1.0f)); /* Take the rotation of the skybox into account.	
 		return vec4(texture(skybox_texture, rayDir).rgb, 1.0f);
 	}
 	
-	/* Second refraction. */
+	/* Second refraction. 
 	
 	float eyeThick   = (LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z)) / far;
 	float angleRatio = acos(dot(rayDir,  -outFrontfaceNorm)) / acos(dot(nEyeDir, -outFrontfaceNorm));
@@ -65,55 +64,70 @@ vec4 approximate_rt(){
 	if (all(equal(rayDir2, vec3(0.0))))
 		rayDir2 = reflect(rayDir, -exitNormal);
 	
-	rayDir2 = vec3(inverse(skybox_model_matrix) * vec4(rayDir2, 1.0f)); /* Take the rotation of the skybox into account. */		
+	rayDir2 = vec3(inverse(skybox_model_matrix) * vec4(rayDir2, 1.0f)); /* Take the rotation of the skybox into account. 
 	
 	return vec4(texture(skybox_texture, rayDir2).rgb, 1.0f);
-}
+}*/
 
-vec4 apply_diffuse_specular(vec3 fragment_colour){
-
-	vec3 light_position = vec3(0.0, 0.0, 15.0); //the location of the light in world coordinates
-	vec3 light_colour = vec3(1.0); // white light
-
-	/* Diffuse lighting. */
+vec4 approximate_rt_new_try(){
 	
-	vec3 light_direction = normalize(light_position - p1); //p1 is the fragment's position in world coordinates
-	float incident_degree = max(dot(outFrontfaceNorm, light_direction), 0.0); //intensity of incidence of light ray with face
-	vec3 diffuse_contribution = incident_degree * light_colour * 0.8; //portion of the light added by diffuse lighting
+	float n_air = 1.0f;
+	float n_diamond = 2.417f;
 
-	/* Specular lighting. */
-	float specular_strength = 0.05f; //overall control knob
-	vec3 view_direction = normalize(eye_position - p1);
-	vec3 reflection_direction = reflect(-light_direction, outFrontfaceNorm); //the r vector is a reflection of the l vector through the normal vector
-	int alpha = 64; //shininess coefficient
-	float spec_degree = pow(max(dot(view_direction, reflection_direction), 0.0), alpha); //intensity of light from specular illumination
-	vec3 specular_contribution = specular_strength * spec_degree * light_colour;
-
-	//the final colour takes contributions from all 3 local lighting techniques
-	vec3 resultant_colour = (diffuse_contribution + specular_contribution) + fragment_colour;
-
-	return vec4(resultant_colour, 1.0f);
+	/* Determine the camera -> fragment direction vector in world coordinates. */
+	
+	vec3 eye_position = vec3(view_matrix * vec4(0));
+	eye_position = vec3(0, 0, 10);
+	vec3 eye_direction = normalize(frag_position - eye_position);
+	
+	/* Determine an approximation for the thickness at this point. */
+	// @TODO: Use the indices of refraction for a better approximation (precompute normal depths)
+	
+	float estimated_thickness = LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z);
+	
+	/* Estimate the refracted point on the back surface. */
+	
+	vec3 first_refraction = refract(eye_direction, outFrontfaceNorm, n_air/n_diamond);
+	
+	if (draw_mode == 1) {
+		/* Single refraction. */
+		return vec4(texture(skybox_texture, vec3(inverse(skybox_model_matrix) * vec4(first_refraction, 1.0f))).rgb, 1.0f);
+	}
+	
+	vec3 back_point = frag_position + estimated_thickness * first_refraction;
+	
+	/* Determine the direction of the second refraction. */
+	
+	vec4 back_point_ndc = projection_matrix * view_matrix * vec4(back_point, 1.0);
+	vec2 back_point_px = (back_point_ndc.xy / back_point_ndc.w / 2.0) + 0.5;
+	
+	vec3 back_point_normal = normalize((texture2D(backface_normals_texture, back_point_px).xyz * 2.0f) - 1.0f); //change the range from [0, 1] to [-1, 1] for image decoding
+	vec3 second_refraction = refract(first_refraction, -back_point_normal, n_diamond/n_air);
+	
+	if (all(equal(second_refraction, vec3(0.0))))
+		second_refraction = reflect(first_refraction, -back_point_normal.xyz);
+	
+	/* Cast the ray and sample the environment. */
+	
+	return vec4(texture(skybox_texture, vec3(inverse(skybox_model_matrix) * vec4(second_refraction, 1.0f))).rgb, 1.0f);
 }
 
 void main() {
 	switch(draw_mode) {
 		case 0:
-			frag_color = approximate_rt();
+			frag_color = approximate_rt_new_try();
 			
-			if(draw_specular)
-				frag_color = apply_diffuse_specular(vec3(frag_color));			
 			break;
 		case 1:
-			frag_color = approximate_rt();
-			
-			if(draw_specular)
-				frag_color = apply_diffuse_specular(vec3(frag_color));			
+			frag_color = approximate_rt_new_try();
+					
 			break;
 		case 2: //front normals
 			frag_color = vec4((outFrontfaceNorm + 1.0f)/2.0f, 1.0f);
 			break;
 		case 3: //back normals
-			frag_color = vec4((texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb + 1.0f) / 2.0f, 1.0f);
+
+			frag_color = vec4((texture(backface_normals_texture, gl_FragCoord.xy / window_size).rgb ) * 2.0, 1.0f);
 			break;
 		case 4: //front depth
 			float front_depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
