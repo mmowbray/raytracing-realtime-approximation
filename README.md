@@ -19,11 +19,11 @@ This is an implementation of Wyman's 2005 double-pass raytracing approximation a
 
 # Screenshots
 
+![screenshot0](Screenshots/screenshot_animated.gif)
 ![screenshot1](Screenshots/diamond_two_surface_lighting.png)
 ![screenshot2](Screenshots/diamond_front_normals.png)
 ![screenshot3](Screenshots/diamond_total_depth.png)
 
 # Bugs
 
-+ Subtle error are present in the approximation (under investigation)
 + Minimizing and maximizing sporadically crashes the program (under investigation)
