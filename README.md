@@ -1,6 +1,8 @@
 # raytracing-realtime-approximation
 Realtime raytracing approximation using a double-pass technique.
 
+![screenshot0](Screenshots/screenshot_animated.gif)
+
 This is an implementation of Wyman's 2005 double-pass raytracing approximation algorithm. For more information, please see the accompanying report.
 
 # Controls
@@ -19,7 +21,6 @@ This is an implementation of Wyman's 2005 double-pass raytracing approximation a
 
 # Screenshots
 
-![screenshot0](Screenshots/screenshot_animated.gif)
 ![screenshot1](Screenshots/diamond_two_surface_lighting.png)
 ![screenshot2](Screenshots/diamond_front_normals.png)
 ![screenshot3](Screenshots/diamond_total_depth.png)
