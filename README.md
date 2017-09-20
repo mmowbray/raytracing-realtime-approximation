@@ -3,8 +3,7 @@ Implementation of Wyman's realtime raytracing approximation from 2005.
 
 ## Screenshots
 
-![screenshot 1](assets/screenshots/screenshot_1.png)
-![screenshot 2](assets/screenshots/screenshot_2.png)
+![screenshot 1](assets/screenshots/animated_screenshot.gif)
 
 ## Instructions
 
