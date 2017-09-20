@@ -8,7 +8,7 @@ Implementation of Wyman's realtime raytracing approximation from 2005.
 
 ## Instructions
 
-Clion uses CMake which should simplify using GLFW3, GLEW, and GLM.
+Designed to be edited and run with Visual Studio Code.
 
 ### MacOS
 
@@ -16,7 +16,5 @@ Brew has up-to-date versions of all three dependencies.
 
 ```
 brew update
-brew install glfw glew glm cimg
+brew install glfw glew glm
 ```
-
-cimg requires XQuartz be installed.

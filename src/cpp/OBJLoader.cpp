@@ -1,8 +1,3 @@
-//
-// Created by Maxwell Mowbray on 2017-09-09.
-//
-
-
 #include <string>
 #include <fstream>
 
