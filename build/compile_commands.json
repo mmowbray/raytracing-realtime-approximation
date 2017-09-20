@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -DGLFW_DLL -I/Users/mmowbray/raytracing-realtime-approximation/include -isystem /usr/local/include -I/usr/X11R6/include  -O3 -DNDEBUG   -std=gnu++11 -o CMakeFiles/raytracing-realtime-approximation.dir/src/cpp/App.cpp.o -c /Users/mmowbray/raytracing-realtime-approximation/src/cpp/App.cpp",
+  "file": "/Users/mmowbray/raytracing-realtime-approximation/src/cpp/App.cpp"
+},
+{
+  "directory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -DGLFW_DLL -I/Users/mmowbray/raytracing-realtime-approximation/include -isystem /usr/local/include -I/usr/X11R6/include  -O3 -DNDEBUG   -std=gnu++11 -o CMakeFiles/raytracing-realtime-approximation.dir/src/cpp/GLSLProgram.cpp.o -c /Users/mmowbray/raytracing-realtime-approximation/src/cpp/GLSLProgram.cpp",
+  "file": "/Users/mmowbray/raytracing-realtime-approximation/src/cpp/GLSLProgram.cpp"
+},
+{
+  "directory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -DGLFW_DLL -I/Users/mmowbray/raytracing-realtime-approximation/include -isystem /usr/local/include -I/usr/X11R6/include  -O3 -DNDEBUG   -std=gnu++11 -o CMakeFiles/raytracing-realtime-approximation.dir/src/cpp/Model.cpp.o -c /Users/mmowbray/raytracing-realtime-approximation/src/cpp/Model.cpp",
+  "file": "/Users/mmowbray/raytracing-realtime-approximation/src/cpp/Model.cpp"
+},
+{
+  "directory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -DGLFW_DLL -I/Users/mmowbray/raytracing-realtime-approximation/include -isystem /usr/local/include -I/usr/X11R6/include  -O3 -DNDEBUG   -std=gnu++11 -o CMakeFiles/raytracing-realtime-approximation.dir/src/cpp/OBJLoader.cpp.o -c /Users/mmowbray/raytracing-realtime-approximation/src/cpp/OBJLoader.cpp",
+  "file": "/Users/mmowbray/raytracing-realtime-approximation/src/cpp/OBJLoader.cpp"
+}
+]

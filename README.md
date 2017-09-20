@@ -1,30 +1,22 @@
 # raytracing-realtime-approximation
-Realtime raytracing approximation using a double-pass technique.
+Implementation of Wyman's realtime raytracing approximation from 2005.
 
-![screenshot0](Screenshots/screenshot_animated.gif)
+## Screenshots
 
-This is an implementation of Wyman's 2005 double-pass raytracing approximation algorithm. For more information, please see the accompanying report.
+![screenshot 1](assets/screenshots/screenshot_1.png)
+![screenshot 2](assets/screenshots/screenshot_2.png)
 
-# Controls
+## Instructions
 
-- C load cube model
-- D load diamond model
+Clion uses CMake which should simplify using GLFW3, GLEW, and GLM.
 
-- Space toggle lighting
-- 1 two-pass approximation
-- 2 surface apporixmation
-- 3 front normals
-- 4 back normals
-- 5 front depth
-- 6 back depth
-- 7 total depth
+### MacOS
 
-# Screenshots
+Brew has up-to-date versions of all three dependencies.
 
-![screenshot1](Screenshots/diamond_two_surface_lighting.png)
-![screenshot2](Screenshots/diamond_front_normals.png)
-![screenshot3](Screenshots/diamond_total_depth.png)
+```
+brew update
+brew install glfw glew glm cimg
+```
 
-# Bugs
-
-+ Minimizing and maximizing sporadically crashes the program (under investigation)
+cimg requires XQuartz be installed.

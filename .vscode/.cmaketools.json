@@ -1,0 +1,78 @@
+{
+  "variant": {
+    "label": "Release",
+    "keywordSettings": {
+      "buildType": "release"
+    },
+    "description": "Enable optimizations, omit debug info"
+  },
+  "activeEnvironments": [],
+  "codeModel": {
+    "configurations": [
+      {
+        "name": "Release",
+        "projects": [
+          {
+            "buildDirectory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+            "name": "raytracing-realtime-approximation",
+            "sourceDirectory": "/Users/mmowbray/raytracing-realtime-approximation",
+            "targets": [
+              {
+                "artifacts": [
+                  "/Users/mmowbray/raytracing-realtime-approximation/build/raytracing-realtime-approximation"
+                ],
+                "buildDirectory": "/Users/mmowbray/raytracing-realtime-approximation/build",
+                "fileGroups": [
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "include/Model.h",
+                      "include/OBJLoader.h",
+                      "include/App.h"
+                    ]
+                  },
+                  {
+                    "compileFlags": "-O3 -DNDEBUG   -std=gnu++11",
+                    "defines": [
+                      "GLFW_DLL"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/mmowbray/raytracing-realtime-approximation/include"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/usr/local/include"
+                      },
+                      {
+                        "path": "/usr/X11R6/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/cpp/App.cpp",
+                      "src/cpp/GLSLProgram.cpp",
+                      "src/cpp/Model.cpp",
+                      "src/cpp/OBJLoader.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "raytracing-realtime-approximation",
+                "linkLanguageFlags": "-O3 -DNDEBUG",
+                "linkLibraries": "/usr/local/lib/libGLEW.dylib /usr/X11R6/lib/libSM.dylib /usr/X11R6/lib/libICE.dylib /usr/X11R6/lib/libX11.dylib /usr/X11R6/lib/libXext.dylib -framework OpenGL /usr/local/lib/libglfw.3.2.dylib",
+                "linkerLanguage": "CXX",
+                "name": "raytracing-realtime-approximation",
+                "sourceDirectory": "/Users/mmowbray/raytracing-realtime-approximation",
+                "type": "EXECUTABLE"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "cookie": "0.14909872639403599",
+    "inReplyTo": "codemodel",
+    "type": "reply"
+  }
+}
