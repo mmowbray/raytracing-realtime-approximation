@@ -24,7 +24,7 @@ int screen_width = DEFAULT_WINDOW_WIDTH, screen_height = DEFAULT_WINDOW_HEIGHT;
 const GLfloat CAMERA_MOVEMENT_SPEED = 0.02f;
 
 GLSLProgram *backShader, *frontShader, *skyboxShader;
-Model *model, *diamond, *cube, *skybox;
+Model *model, *diamond, *cube, *skybox, *sphere;
 
 double ypos_old = -1, xpos_old = -1;
 
@@ -116,93 +116,42 @@ void key_callback(GLFWwindow*, int key, int, int action, int)
             model = cube;
         else if (key == GLFW_KEY_D)
             model = diamond;
+        else if (key == GLFW_KEY_S)
+            model = sphere;
         else if(key >= GLFW_KEY_1 && key <= GLFW_KEY_7)
             draw_mode = key - GLFW_KEY_1;
     }
 }
 
-void setupShaders()
+GLSLProgram* setupShader(const char* shaderVSSource, const char* shaderFSSource)
 {
+    GLSLProgram* shaderProgram = new GLSLProgram();
 
-    backShader = new GLSLProgram();
-
-    if(!backShader->compileShaderFromFile("src/glsl/backface.vs", GL_VERTEX_SHADER))
+    if(!shaderProgram->compileShaderFromFile(shaderVSSource, GL_VERTEX_SHADER))
     {
-        printf("Backface Vertex shader failed to compile! %s\n", backShader->log().c_str());
+ 
+        delete shaderProgram;
         exit(1);
     }
 
-    if (!backShader->compileShaderFromFile("src/glsl/backface.fs", GL_FRAGMENT_SHADER))
+    if (!shaderProgram->compileShaderFromFile(shaderFSSource, GL_FRAGMENT_SHADER))
     {
-        printf("Backface Fragment shader failed to compile! %s\n", backShader->log().c_str());
+        printf("Backface Fragment shader failed to compile! %s\n", shaderProgram->log().c_str());
+        delete shaderProgram;
         exit(1);
     }
 
-    if (!backShader->link())
+    if (!shaderProgram->link())
     {
-        printf("Backface Shader program failed to link! %s\n", backShader->log().c_str());
+        printf("Backface Shader program failed to link! %s\n", shaderProgram->log().c_str());
+        delete shaderProgram;
         exit(1);
     }
 
-    backShader->printActiveUniforms();
-    backShader->printActiveAttribs();
+    shaderProgram->printActiveUniforms();
+    shaderProgram->printActiveAttribs();
 
-    frontShader = new GLSLProgram();
-
-    if(!frontShader->compileShaderFromFile("src/glsl/frontface.vs", GL_VERTEX_SHADER))
-    {
-        printf("Frontface Vertex shader failed to compile! %s\n", frontShader->log().c_str());
-        exit(1);
-    }
-
-    if (!frontShader->compileShaderFromFile("src/glsl/frontface.fs", GL_FRAGMENT_SHADER))
-    {
-        printf("Frontface Fragment shader failed to compile! %s\n", frontShader->log().c_str());
-        exit(1);
-    }
-
-    if (!frontShader->link())
-    {
-        printf("Frontface Shader program failed to link! %s\n", frontShader->log().c_str());
-        exit(1);
-    }
-
-    frontShader->printActiveUniforms();
-    frontShader->printActiveAttribs();
-
-    skyboxShader = new GLSLProgram();
-
-    if(!skyboxShader->compileShaderFromFile("src/glsl/skybox.vs", GL_VERTEX_SHADER))
-    {
-        printf("Skybox Vertex shader failed to compile! %s\n", skyboxShader->log().c_str());
-        exit(1);
-    }
-
-    if (!skyboxShader->compileShaderFromFile("src/glsl/skybox.fs", GL_FRAGMENT_SHADER))
-    {
-        printf("Skybox Fragment shader failed to compile! %s\n", skyboxShader->log().c_str());
-        exit(1);
-    }
-
-    if (!skyboxShader->link())
-    {
-        printf("Skybox Shader program failed to link! %s\n", skyboxShader->log().c_str());
-        exit(1);
-    }
-
-    skyboxShader->printActiveUniforms();
-    skyboxShader->printActiveAttribs();
-}
-
-void cleanUp()
-{
-    delete backShader;
-    delete frontShader;
-    delete skyboxShader;
-    delete model;
-    delete skybox;
-
-    glfwTerminate();
+    return shaderProgram;
 }
 
 int main()
@@ -243,10 +192,14 @@ int main()
     if (glewInit() != GLEW_OK)
         exit(1);
 
-    setupShaders();
+    backShader = setupShader("src/glsl/backface.vs", "src/glsl/backface.fs");
+    frontShader = setupShader("src/glsl/frontface.vs", "src/glsl/frontface.fs");
+    skyboxShader = setupShader("src/glsl/skybox.vs", "src/glsl/skybox.fs");
 
     cube = new Model("assets/models/cube.obj");
     diamond = new Model("assets/models/diamond.obj");
+    sphere = new Model("assets/models/sphere.obj");
+
     model = cube;
     skybox = new Model("assets/models/cube.obj");
 
@@ -378,6 +331,5 @@ int main()
         glfwPollEvents();
     }
 
-    cleanUp();
     exit(0);
 }
