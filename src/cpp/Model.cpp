@@ -5,6 +5,7 @@
 #include <OBJLoader.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+
 Model::Model(const std::string & fileName) {
 
     /* Load the model's mesh. */
@@ -32,6 +33,8 @@ Model::Model(const std::string & fileName) {
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
+
+    modelMatrix = glm::mat4(1.0f);
 }
 
 void Model::update() {
@@ -44,6 +47,10 @@ void Model::draw() {
     glBindVertexArray(0);
 }
 
-glm::mat4 &Model::getModelMatrix() {
+glm::mat4 Model::getModelMatrix() {
     return modelMatrix;
+}
+
+void Model::setModelMatrix(glm::mat4 modelMatrix) {
+    this->modelMatrix = modelMatrix;
 }

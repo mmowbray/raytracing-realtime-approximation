@@ -2,35 +2,46 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "build raytracing-realtime-approximation",
+            "label": "build opengl-app",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "windows": {
-                "command": "",
-                "args": []
+                "command": ".vscode/build_windows.bat"
             },
             "osx": {
-                "command": "rm -rf build; mkdir build; cd build; g++",
+                "command": "rm -rf build; mkdir build; cd build; clang++",
                 "args": [
                     "-g",
                     "-I ${workspaceRoot}/include/",
                     "-framework OpenGL",
                     "-lglew",
                     "-lglfw",
-                    "${workspaceRoot}/src/cpp/GLSLProgram.cpp",
-                    "${workspaceRoot}/src/cpp/Model.cpp",
-                    "${workspaceRoot}/src/cpp/OBJLoader.cpp",
-                    "${workspaceRoot}/src/cpp/App.cpp",
-                    "-o raytracing-realtime-approximation"
+                    "${workspaceRoot}/src/cpp/*.cpp",
+                    "-o opengl-app"
                 ]
             },
             "linux": {
-                "command": "",
-                "args": []
-            }
+                "command": "rm -rf build; mkdir build; cd build; g++",
+                "args": [
+                    "-g",
+                    "-I ${workspaceRoot}/include/",
+                    "${workspaceRoot}/src/cpp/*.cpp",
+                    "-lGL",
+                    "-lGLEW",
+                    "-lglfw",
+                    "-o opengl-app"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "run opengl-app",
+            "type": "shell",
+            "command": "./build/opengl-app",
+            "problemMatcher": []
         }
     ]
 }

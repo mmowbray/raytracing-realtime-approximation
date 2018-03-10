@@ -3,10 +3,10 @@
         "configurations": [
             {
                 "name": "(lldb) Launch",
-                "preLaunchTask": "build raytracing-realtime-approximation",
+                "preLaunchTask": "opengl-app",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceRoot}/build/raytracing-realtime-approximation",
+                "program": "${workspaceRoot}/build/opengl-app",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${workspaceRoot}",

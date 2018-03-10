@@ -15,7 +15,8 @@ public:
     Model(const std::string & fileName);
     void update();
     void draw();
-    glm::mat4& getModelMatrix();
+    glm::mat4 getModelMatrix();
+    void setModelMatrix(glm::mat4 modelMatrix);
 };
 
 #endif //RAYTRACING_REALTIME_APPROXIMATION_MODEL_H
