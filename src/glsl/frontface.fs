@@ -17,6 +17,8 @@ uniform mat4 skybox_model_matrix_inv;
 
 uniform int draw_mode;
 
+uniform float manual_thickness;
+
 uniform mat4 model_matrix;
 uniform mat4 view_matrix;
 uniform mat4 projection_matrix;
@@ -49,11 +51,6 @@ float approximate_rt(vec3 channel){
 	/* Estimate the refracted point on the back surface. */
 	
 	vec3 first_refraction = refract(eye_direction, outFrontfaceNorm, n_air/channel_refract);
-	
-	if (draw_mode == 1) {
-		/* Single refraction. */
-		return dot(texture(skybox_texture, vec3(skybox_model_matrix_inv * vec4(first_refraction, 0.0f))).rgb, channel);
-	}
 
 	/* Determine an approximation for the thickness at this point. */
 	// @TODO: Use precomputed normal depths for better thickness approximation
@@ -63,7 +60,7 @@ float approximate_rt(vec3 channel){
 	
 	float eye_thickness = LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z);
 
-	float manual_thickness = 1.1f;
+
 	float estimated_thickness = angleRatio * eye_thickness * (1.0f - angleRatio) * manual_thickness;
 	
 	vec3 back_point = frag_position + estimated_thickness * first_refraction;
@@ -78,7 +75,8 @@ float approximate_rt(vec3 channel){
 	
 	if (all(equal(second_refraction, vec3(0.0))))
 		second_refraction = reflect(first_refraction, -back_point_normal);
-	
+
+
 	/* Cast the ray and sample the environment. */
 	
 	return dot(texture(skybox_texture, vec3(skybox_model_matrix_inv * vec4(second_refraction, 1.0f))).rgb, channel);
@@ -92,16 +90,17 @@ vec4 wholething(){
 	final.g = approximate_rt (vec3 (0.0, 1.0, 0.0));
 	final.b = approximate_rt (vec3 (0.0, 0.0, 1.0));
 
+	vec3 lightColor = vec3(0.5f);
+	vec3 lightPos = vec3(inverse(skybox_model_matrix_inv) *  vec4(0.0f, 4.5f, 0.0f, 1.0));
+	vec3 lightDir = normalize(lightPos - frag_position);
 
-	vec3 lightPos = vec3(0, 5.0f, -4.0f);
-	vec3 lightColor = vec3(0.2f);
-
-	vec3 lightDir = normalize(eye_position - frag_position);
 	float diff = max(dot(outFrontfaceNorm, lightDir), 0.0);
 	vec3 diffuse = diff * lightColor;
 	final = vec4(diffuse + final.rgb, 1.0f);
 
-	return final + 0.3 * vec4(255,192,203, 0.0) / 255.0;
+//	return vec4(diffuse, 1.0f);
+
+	return final + 0.3 * vec4(0,0,35, 0.0) / 255.0;
 }
 
 void main() {

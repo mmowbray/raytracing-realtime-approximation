@@ -7,6 +7,7 @@
 #include <GLSLProgram.h>
 #include <Model.h>
 #include <vector>
+#include <iostream>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -25,7 +26,11 @@ const GLfloat CAMERA_MOVEMENT_SPEED = 0.28f;
 
 GLSLProgram *backShader, *frontShader, *skyboxShader, *metalBandShader;
 
-Model *skybox, *ringDiamond, *ringMetalBand;
+Model *skybox, *ringDiamond, *ringBand;
+Model *ringDiamond1, *ringBand1;
+Model *ringDiamond2, *ringBand2;
+
+float manual_thickness = 10.0f;
 
 double ypos_old = -1, xpos_old = -1;
 double ypos_old_skybox = -1, xpos_old_skybox = -1;
@@ -34,6 +39,7 @@ int draw_mode = 0;
 
 GLuint backface_normals_tex;
 GLuint backface_depth_tex;
+GLuint backface_cleanup_depth_tex;
 
 GLuint loadCubemap(std::vector<const GLchar*> faces)
 {
@@ -81,6 +87,12 @@ void framebuffer_size_callback(GLFWwindow*, int new_screen_width, int new_screen
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, backface_depth_tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, screen_width, screen_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+    /* Resize the backface cleanup texture. */
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, backface_cleanup_depth_tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, screen_width, screen_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 }
 
 void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -93,7 +105,7 @@ void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
             ringDiamond->setModelMatrix(glm::rotate(ringDiamond->getModelMatrix(), (float)(0.005 * (xpos_old - xpos)), glm::vec3(0.0, 1.0, 0.0)));
             ringDiamond->setModelMatrix(glm::rotate(ringDiamond->getModelMatrix(), (float)(0.005 * (ypos_old - ypos)), glm::vec3(1.0, 0.0, 0.0)));
 
-            ringMetalBand->setModelMatrix(ringDiamond->getModelMatrix());
+            ringBand->setModelMatrix(ringDiamond->getModelMatrix());
 
             ypos_old = ypos;
             xpos_old = xpos;
@@ -104,6 +116,8 @@ void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         ypos_old = -1;
     }
+
+
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
@@ -134,8 +148,25 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void key_callback(GLFWwindow*, int key, int, int action, int)
 {
     if(action == GLFW_PRESS){
-        if(key >= GLFW_KEY_1 && key <= GLFW_KEY_6)
+        if(key >= GLFW_KEY_1 && key <= GLFW_KEY_6){
             draw_mode = key - GLFW_KEY_1;
+        }
+        else if(key == GLFW_KEY_O){
+            ringDiamond = ringDiamond1;
+            ringBand = ringBand1;
+        }
+        else if(key == GLFW_KEY_P){
+            ringDiamond = ringDiamond2;
+            ringBand = ringBand2;
+        }
+        else if(key == GLFW_KEY_UP){
+            manual_thickness += 0.5f;
+            std::cout << "Thickness: " << manual_thickness << std::endl;
+        }
+        else if(key == GLFW_KEY_DOWN){
+            manual_thickness -= 0.5f;
+            std::cout << "Thickness: " << manual_thickness << std::endl;
+        }
      }
 }
 
@@ -213,8 +244,15 @@ int main()
     skyboxShader = setupShader("src/glsl/skybox.vs", "src/glsl/skybox.fs");
     metalBandShader = setupShader("src/glsl/metal.vs", "src/glsl/metal.fs");
 
-    ringDiamond = new Model("assets/models/justdiamond.obj");
-    ringMetalBand = new Model("assets/models/ringMetal.obj");
+    ringDiamond1 = new Model("assets/models/diamond1.obj");
+    ringBand1 = new Model("assets/models/band1.obj");
+
+    ringDiamond2 = new Model("assets/models/diamond2.obj");
+    ringBand2 = new Model("assets/models/band2.obj");
+
+    ringDiamond = ringDiamond2;
+    ringBand = ringBand2;
+
     skybox = new Model("assets/models/cube.obj");
 
     glEnable(GL_DEPTH_TEST);
@@ -248,6 +286,8 @@ int main()
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, backface_depth_tex, 0);
 
+
+
     // Set the list of draw buffers.
     GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
@@ -277,6 +317,9 @@ int main()
     GLuint cubemapTexture = loadCubemap(faces);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
+    glClearColor(0.25, 0.65, 0.55, 1.0);
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -295,18 +338,22 @@ int main()
         skyboxShader->setUniform("skyboxTexture", 2);
 
         glDepthMask(GL_FALSE);
-        skybox->draw();
+        //skybox->draw();
         glDepthMask(GL_TRUE);
 
         metalBandShader->use();
-        metalBandShader->setUniform("model_matrix", ringMetalBand->getModelMatrix());
+        metalBandShader->setUniform("model_matrix", ringBand->getModelMatrix());
         metalBandShader->setUniform("view_matrix", view_matrix);
         metalBandShader->setUniform("projection_matrix", projection_matrix);
         metalBandShader->setUniform("eye_position", camera_position);
         metalBandShader->setUniform("skybox_model_matrix_inv", glm::inverse(skybox->getModelMatrix()));
         metalBandShader->setUniform("skybox_texture", 2);
 
-        ringMetalBand->draw();
+
+        ringBand->draw();
+
+
+
 
         glBindFramebuffer(GL_FRAMEBUFFER, backface_fbo);
         glClearDepth(0.0f);
@@ -319,6 +366,12 @@ int main()
         backShader->setUniform("projection_matrix", projection_matrix);
 
         ringDiamond->draw();
+
+
+
+
+
+
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDepthFunc(GL_LESS);
@@ -334,7 +387,9 @@ int main()
         frontShader->setUniform("window_size", screen_width, screen_height);
         frontShader->setUniform("draw_mode", draw_mode);
         frontShader->setUniform("eye_position", camera_position);
+        frontShader->setUniform("manual_thickness", manual_thickness);
 
+        
         ringDiamond->draw();
 
         glfwSwapBuffers(window);
