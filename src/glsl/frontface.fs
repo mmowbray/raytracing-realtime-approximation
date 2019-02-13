@@ -14,6 +14,7 @@ uniform samplerCube skybox_texture;
 uniform vec2 window_size;
 
 uniform mat4 skybox_model_matrix_inv;
+uniform mat4 skybox_model_matrix;
 
 uniform int draw_mode;
 
@@ -60,7 +61,6 @@ float approximate_rt(vec3 channel){
 	
 	float eye_thickness = LinearizeDepth(texture(backface_depth_texture, gl_FragCoord.xy / window_size).x) - LinearizeDepth(gl_FragCoord.z);
 
-
 	float estimated_thickness = angleRatio * eye_thickness * (1.0f - angleRatio) * manual_thickness;
 	
 	vec3 back_point = frag_position + estimated_thickness * first_refraction;
@@ -87,11 +87,13 @@ vec4 wholething(){
 	vec4 final = vec4(1.0f);
 
 	final.r = approximate_rt (vec3(1.0, 0.0, 0.0));
-	final.g = approximate_rt (vec3 (0.0, 1.0, 0.0));
-	final.b = approximate_rt (vec3 (0.0, 0.0, 1.0));
 
+	final.g=approximate_rt (vec3(0.0, 1.0, 0.0));
+	final.b=approximate_rt (vec3(0.0, 0.0, 1.0));
+
+	//return final;
 	vec3 lightColor = vec3(0.5f);
-	vec3 lightPos = vec3(inverse(skybox_model_matrix_inv) *  vec4(0.0f, 4.5f, 0.0f, 1.0));
+	vec3 lightPos = vec3(skybox_model_matrix *  vec4(0.0f, 4.5f, 0.0f, 1.0));
 	vec3 lightDir = normalize(lightPos - frag_position);
 
 	float diff = max(dot(outFrontfaceNorm, lightDir), 0.0);
@@ -100,7 +102,7 @@ vec4 wholething(){
 
 //	return vec4(diffuse, 1.0f);
 
-	return final + 0.3 * vec4(0,0,35, 0.0) / 255.0;
+	return final + 0.3 * vec4(0,0,65, 0.0) / 255.0;
 }
 
 void main() {

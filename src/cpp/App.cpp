@@ -30,7 +30,7 @@ Model *skybox, *ringDiamond, *ringBand;
 Model *ringDiamond1, *ringBand1;
 Model *ringDiamond2, *ringBand2;
 
-float manual_thickness = 10.0f;
+float manual_thickness = 5.0f;
 
 double ypos_old = -1, xpos_old = -1;
 double ypos_old_skybox = -1, xpos_old_skybox = -1;
@@ -216,7 +216,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-    glfwWindowHint(GLFW_SAMPLES, 8);
+    //glfwWindowHint(GLFW_SAMPLES, 8);
 
     window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
 
@@ -258,7 +258,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     projection_matrix = glm::perspective(45.0f, (float)screen_width/(float)screen_height, 0.1f, 100.0f);
-    glEnable(GL_MULTISAMPLE);
+    //glEnable(GL_MULTISAMPLE);
 
     GLuint backface_fbo = 0;
     glGenFramebuffers(1, &backface_fbo);
@@ -338,7 +338,7 @@ int main()
         skyboxShader->setUniform("skyboxTexture", 2);
 
         glDepthMask(GL_FALSE);
-        //skybox->draw();
+        skybox->draw();
         glDepthMask(GL_TRUE);
 
         metalBandShader->use();
@@ -381,6 +381,7 @@ int main()
         frontShader->setUniform("view_matrix", view_matrix);
         frontShader->setUniform("projection_matrix", projection_matrix);
         frontShader->setUniform("skybox_model_matrix_inv", glm::inverse(skybox->getModelMatrix()));
+        frontShader->setUniform("skybox_model_matrix", skybox->getModelMatrix());
         frontShader->setUniform("backface_normals_texture", 0);
         frontShader->setUniform("backface_depth_texture", 1);
         frontShader->setUniform("skybox_texture", 2);
